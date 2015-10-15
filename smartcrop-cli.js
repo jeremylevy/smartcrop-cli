@@ -52,17 +52,33 @@ var fs = require('fs'),
 var img = new Canvas.Image(),
     options = _.extend({canvasFactory: function(w, h){ return new Canvas(w, h); }}, argv.config, _.omit(argv, 'config', 'quality'));
 
-img.src = fs.readFileSync(input);
-SmartCrop.crop(img, options, function(result){
-    console.log(JSON.stringify(result, null, '  '));
-    if(output && options.width && options.height){
-        var canvas = new Canvas(options.width, options.height),
-            ctx = canvas.getContext('2d'),
-            crop = result.topCrop,
-            f = fs.createWriteStream(output);
-        ctx.patternQuality = 'best';
-        ctx.filter = 'best';
-        ctx.drawImage(img, crop.x, crop.y, crop.width, crop.height, 0, 0, canvas.width, canvas.height);
-        canvas.syncJPEGStream({quality: argv.quality}).pipe(f);
+fs.readFile(input, function(err, data){
+    if(err){
+        console.error(err);
+        process.exit(1);
     }
+    
+    img.src = data;
+    
+    SmartCrop.crop(img, options, function(result){
+        console.log(JSON.stringify(result, null, '  '));
+        if(output && options.width && options.height){
+            var canvas = new Canvas(options.width, options.height),
+                ctx = canvas.getContext('2d'),
+                crop = result.topCrop,
+                
+            ctx.patternQuality = 'best';
+            ctx.filter = 'best';
+            ctx.drawImage(img, crop.x, crop.y, crop.width, crop.height, 0, 0, canvas.width, canvas.height);
+            
+            fs.writeFile(output, canvas.toBuffer(), function(err){
+                if(err){
+                    console.error(err);
+                    process.exit(1);
+                }
+                
+                process.exit(0);
+            });
+        }
+    });
 });
