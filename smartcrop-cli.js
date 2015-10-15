@@ -65,7 +65,7 @@ fs.readFile(input, function(err, data){
         if(output && options.width && options.height){
             var canvas = new Canvas(options.width, options.height),
                 ctx = canvas.getContext('2d'),
-                crop = result.topCrop,
+                crop = result.topCrop;
                 
             ctx.patternQuality = 'best';
             ctx.filter = 'best';
